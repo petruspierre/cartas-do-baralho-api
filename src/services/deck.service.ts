@@ -15,6 +15,14 @@ export class DecksService {
     return this.prisma.deck.findMany();
   }
 
+  async getDeckById(id: string) {
+    return this.prisma.deck.findFirst({
+      where: {
+        id,
+      },
+    });
+  }
+
   async createDeck({ title, description }: CreateDeckParams) {
     return this.prisma.deck.create({
       data: {

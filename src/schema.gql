@@ -18,4 +18,5 @@ type Deck {
 
 type Query {
   decks: [Deck!]!
+  cards(deckId: String!): [Card!]!
 }

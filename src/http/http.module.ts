@@ -6,6 +6,8 @@ import { resolve } from 'node:path';
 import { DatabaseModule } from '@database/database.module';
 import { DeckResolver } from './graphql/resolvers/deck.resolver';
 import { DecksService } from '@services/deck.service';
+import { CardsService } from '@services/card.service';
+import { CardResolver } from './graphql/resolvers/card.resolver';
 
 @Module({
   imports: [
@@ -15,6 +17,6 @@ import { DecksService } from '@services/deck.service';
       autoSchemaFile: resolve(process.cwd(), 'src/schema.gql'),
     }),
   ],
-  providers: [DeckResolver, DecksService],
+  providers: [DeckResolver, CardResolver, DecksService, CardsService],
 })
 export class HttpModule {}
