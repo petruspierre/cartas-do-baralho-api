@@ -8,14 +8,14 @@ interface CreateDeckParams {
 }
 
 @Injectable()
-export class CardsService {
+export class DecksService {
   constructor(private prisma: PrismaService) {}
 
   async listAllDecks() {
     return this.prisma.deck.findMany();
   }
 
-  async createCard({ title, description }: CreateDeckParams) {
+  async createDeck({ title, description }: CreateDeckParams) {
     return this.prisma.deck.create({
       data: {
         title,

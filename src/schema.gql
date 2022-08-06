@@ -1,0 +1,21 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type Card {
+  id: ID!
+  text: String!
+  type: String!
+  deck: Deck!
+}
+
+type Deck {
+  id: ID!
+  title: String!
+  description: String
+  cards: [Card!]!
+}
+
+type Query {
+  decks: [Deck!]!
+}
