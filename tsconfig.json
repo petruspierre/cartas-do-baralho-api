@@ -14,7 +14,8 @@
       "@services/*": ["services/*"],
       "@http/*": ["http/*"],
       "@database/*": ["database/*"],
-      "@shared/*": ["shared/*"]
+      "@shared/*": ["shared/*"],
+      "@game/*": ["game/*"]
     },
     "incremental": true,
     "skipLibCheck": true,
