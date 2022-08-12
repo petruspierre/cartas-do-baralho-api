@@ -1,21 +1,28 @@
 import {
   ConnectedSocket,
   MessageBody,
+  OnGatewayDisconnect,
   SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets';
+import { Server, Socket } from 'socket.io';
+import { Logger, UsePipes } from '@nestjs/common';
 
 import { RoomService } from '@game/services/room.service';
+import { PlayerService } from '@game/services/player.service';
 
 import { events } from './events';
-import { Inject, UsePipes } from '@nestjs/common';
 import { ParseJsonPipe } from './pipes/parse-json.pipe';
-import { Server } from 'socket.io';
-import { Socket } from 'socket.io';
+import { Room } from '@game/models/room.model';
 
 interface CreateRoomBody {
   hostName: string;
+}
+
+interface JoinRoomBody {
+  roomCode: string;
+  playerName?: string;
 }
 
 @WebSocketGateway({
@@ -23,14 +30,37 @@ interface CreateRoomBody {
     origin: '*',
   },
 })
-export class GameGateway {
+export class GameGateway implements OnGatewayDisconnect {
+  private readonly logger = new Logger(GameGateway.name);
+
   @WebSocketServer()
   server: Server;
 
   constructor(
-    @Inject(RoomService)
     private roomService: RoomService,
+    private playerService: PlayerService,
   ) {}
+
+  handleDisconnect(client: Socket) {
+    const player = this.playerService.findByClientId(client.id);
+
+    if (!player || !player.roomId) {
+      return;
+    }
+
+    const room = this.roomService.findByCode(player.roomId);
+
+    if (!room) {
+      return;
+    }
+
+    this.playerService.delete(player.id);
+    const updatedRoom = this.roomService.detelePlayer(room.code, player.id);
+
+    this.server
+      .to(room.code)
+      .emit('player-left', { player, room: updatedRoom });
+  }
 
   @SubscribeMessage(events.CREATE_ROOM)
   @UsePipes(new ParseJsonPipe())
@@ -38,10 +68,62 @@ export class GameGateway {
     @MessageBody() data: CreateRoomBody,
     @ConnectedSocket() client: Socket,
   ) {
-    const room = this.roomService.create(data.hostName);
+    let host = this.playerService.create(client.id, data.hostName);
 
-    client.join(room.id);
+    const room = this.roomService.create(host);
 
-    this.server.to(room.id).emit('room-created', room);
+    host = this.playerService.update(host.id, {
+      roomId: room.code,
+    });
+
+    client.join(room.code);
+
+    this.server.to(room.code).emit('room-created', room);
+  }
+
+  @SubscribeMessage(events.JOIN_ROOM)
+  @UsePipes(new ParseJsonPipe())
+  joinRoom(
+    @MessageBody() data: JoinRoomBody,
+    @ConnectedSocket() client: Socket,
+  ) {
+    this.logger.log(`Joining room ${data.roomCode}`);
+
+    let player = this.playerService.findByClientId(client.id);
+
+    if (!player) {
+      player = this.playerService.create(client.id, data.playerName);
+    } else if ((player.roomId = data.roomCode)) {
+      return;
+    }
+
+    let room = this.roomService.findByCode(data.roomCode);
+    let updatedRoom: Room = null;
+
+    if (!room) {
+      this.logger.log(`Room ${data.roomCode} not found`);
+
+      room = this.roomService.create(player);
+
+      updatedRoom = this.roomService.update(room.code, {
+        code: data.roomCode,
+      });
+    } else {
+      this.logger.log(`Room ${data.roomCode} found`);
+
+      updatedRoom = this.roomService.update(room.code, {
+        code: data.roomCode,
+        players: [...room.players, player],
+      });
+    }
+
+    this.playerService.update(player.id, {
+      roomId: updatedRoom.code,
+    });
+
+    client.join(updatedRoom.code);
+
+    client.emit('room-joined', { player, room: updatedRoom });
+    client.to(updatedRoom.code).emit('player-joined', { room: updatedRoom });
   }
 }

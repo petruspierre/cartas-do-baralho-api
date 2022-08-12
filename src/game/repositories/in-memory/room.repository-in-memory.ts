@@ -1,13 +1,25 @@
 import { v4 as uuid } from 'uuid';
-import { Room } from '@game/models/Room';
+import { Room } from '@game/models/room.model';
+import { Injectable } from '@nestjs/common';
 
 import {
   CreateRoomParams,
   RoomRepository,
 } from '../interfaces/room.repository-interface';
 
+@Injectable()
 export class RoomRepositoryInMemory implements RoomRepository {
   rooms: Room[] = [];
+
+  findByCode(code: string): Room {
+    console.log('rooms', this.rooms);
+
+    return this.rooms.find((r) => r.code === code);
+  }
+
+  findById(id: string): Room {
+    return this.rooms.find((r) => r.id === id);
+  }
 
   create({ host }: CreateRoomParams): Room {
     const room = new Room();
@@ -21,16 +33,22 @@ export class RoomRepositoryInMemory implements RoomRepository {
       id: uuid(),
       hostId: host.id,
       code: roomCode,
-      players: [
-        {
-          id: host.id,
-          name: host.name,
-        },
-      ],
+      players: [host],
     } as Room);
 
     this.rooms.push(room);
 
     return room;
+  }
+
+  update(code: string, room: Partial<Room>): Room {
+    const index = this.rooms.findIndex((r) => r.code === code);
+
+    this.rooms[index] = {
+      ...this.rooms[index],
+      ...room,
+    };
+
+    return this.rooms[index];
   }
 }

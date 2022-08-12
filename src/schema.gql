@@ -16,6 +16,13 @@ type Deck {
   cards: [Card!]!
 }
 
+type Player {
+  id: ID!
+  name: String!
+  clientId: String!
+  roomId: String
+}
+
 type Query {
   decks: [Deck!]!
   cards(deckId: String!): [Card!]!
