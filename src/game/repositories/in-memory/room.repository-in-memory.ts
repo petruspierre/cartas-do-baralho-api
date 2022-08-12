@@ -51,4 +51,8 @@ export class RoomRepositoryInMemory implements RoomRepository {
 
     return this.rooms[index];
   }
+
+  delete(code: string): void {
+    this.rooms = this.rooms.filter((r) => r.code !== code);
+  }
 }

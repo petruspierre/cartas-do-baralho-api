@@ -20,13 +20,23 @@ export class RoomService {
     return this.roomRepository.update(code, room);
   }
 
-  detelePlayer(code: string, playerId: string) {
+  deletePlayer(code: string, playerId: string) {
     const room = this.roomRepository.findByCode(code);
+
+    const playerIsHost = playerId === room.hostId;
+    const firstPlayerNotHost = room.players.find((p) => p.id !== playerId);
 
     const updatedRoom = this.roomRepository.update(code, {
       players: room.players.filter((player) => player.id !== playerId),
-      hostId: room.players.length > 1 ? room.players[0].id : null,
+      hostId:
+        playerIsHost && firstPlayerNotHost
+          ? firstPlayerNotHost.id
+          : room.hostId,
     });
+
+    if (updatedRoom.players.length === 0) {
+      this.roomRepository.delete(code);
+    }
 
     return updatedRoom;
   }

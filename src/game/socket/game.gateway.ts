@@ -25,6 +25,10 @@ interface JoinRoomBody {
   playerName?: string;
 }
 
+interface KickPlayerBody {
+  playerId: string;
+}
+
 @WebSocketGateway({
   cors: {
     origin: '*',
@@ -41,6 +45,7 @@ export class GameGateway implements OnGatewayDisconnect {
     private playerService: PlayerService,
   ) {}
 
+  @SubscribeMessage(events.LEAVE_ROOM)
   handleDisconnect(client: Socket) {
     const player = this.playerService.findByClientId(client.id);
 
@@ -54,12 +59,37 @@ export class GameGateway implements OnGatewayDisconnect {
       return;
     }
 
+    client.leave(room.code);
     this.playerService.delete(player.id);
-    const updatedRoom = this.roomService.detelePlayer(room.code, player.id);
+    const updatedRoom = this.roomService.deletePlayer(room.code, player.id);
 
     this.server
       .to(room.code)
       .emit('player-left', { player, room: updatedRoom });
+  }
+
+  @SubscribeMessage(events.PLAYER_KICKED)
+  @UsePipes(new ParseJsonPipe())
+  handlePlayerKicked(
+    @MessageBody() data: KickPlayerBody,
+    @ConnectedSocket() client: Socket,
+  ) {
+    const player = this.playerService.findByClientId(client.id);
+
+    if (!player || !player.roomId) {
+      return;
+    }
+
+    const room = this.roomService.findByCode(player.roomId);
+
+    if (!room) {
+      return;
+    }
+
+    this.playerService.delete(data.playerId);
+    const updatedRoom = this.roomService.deletePlayer(room.code, data.playerId);
+
+    this.server.to(room.code).emit(events.PLAYER_KICKED, { room: updatedRoom });
   }
 
   @SubscribeMessage(events.CREATE_ROOM)
