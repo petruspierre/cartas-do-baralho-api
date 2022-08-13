@@ -12,8 +12,6 @@ export class RoomRepositoryInMemory implements RoomRepository {
   rooms: Room[] = [];
 
   findByCode(code: string): Room {
-    console.log('rooms', this.rooms);
-
     return this.rooms.find((r) => r.code === code);
   }
 

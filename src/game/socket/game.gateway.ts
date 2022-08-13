@@ -65,10 +65,10 @@ export class GameGateway implements OnGatewayDisconnect {
 
     this.server
       .to(room.code)
-      .emit('player-left', { player, room: updatedRoom });
+      .emit(events.PLAYER_LEFT, { player, room: updatedRoom });
   }
 
-  @SubscribeMessage(events.PLAYER_KICKED)
+  @SubscribeMessage(events.KICK_PLAYER)
   @UsePipes(new ParseJsonPipe())
   handlePlayerKicked(
     @MessageBody() data: KickPlayerBody,
@@ -122,7 +122,7 @@ export class GameGateway implements OnGatewayDisconnect {
     let player = this.playerService.findByClientId(client.id);
 
     if (!player) {
-      player = this.playerService.create(client.id, data.playerName);
+      player = this.playerService.create(client.id, data.playerName ?? '');
     } else if ((player.roomId = data.roomCode)) {
       return;
     }
@@ -147,13 +147,16 @@ export class GameGateway implements OnGatewayDisconnect {
       });
     }
 
-    this.playerService.update(player.id, {
+    const updatedPlayer = this.playerService.update(player.id, {
       roomId: updatedRoom.code,
     });
 
     client.join(updatedRoom.code);
 
-    client.emit('room-joined', { player, room: updatedRoom });
+    client.emit(events.ROOM_JOINED, {
+      player: updatedPlayer,
+      room: updatedRoom,
+    });
     client.to(updatedRoom.code).emit('player-joined', { room: updatedRoom });
   }
 }

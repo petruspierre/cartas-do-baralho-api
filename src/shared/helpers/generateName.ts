@@ -1,5 +1,7 @@
-import { faker } from '@faker-js/faker/locale/pt_BR';
+import { faker } from '@faker-js/faker';
 
 export function generateName() {
-  return `${faker.word.adjective()}-${faker.animal.type()}`;
+  faker.setLocale('pt_BR');
+
+  return `${faker.commerce.product()}-${faker.commerce.productAdjective()}`;
 }

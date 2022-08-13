@@ -12,7 +12,7 @@ export class PlayerService {
   }
 
   create(clientId: string, hostName?: string): Player {
-    return this.playerRepository.create({ name: hostName, clientId });
+    return this.playerRepository.create({ name: hostName ?? '', clientId });
   }
 
   update(id: string, player: Partial<Player>): Player {
