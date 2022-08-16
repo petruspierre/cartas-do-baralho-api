@@ -7,7 +7,7 @@ import {
   WebSocketServer,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { Logger, UsePipes } from '@nestjs/common';
+import { Logger, NotFoundException, UsePipes } from '@nestjs/common';
 
 import { RoomService } from '@game/services/room.service';
 import { PlayerService } from '@game/services/player.service';
@@ -15,6 +15,7 @@ import { PlayerService } from '@game/services/player.service';
 import { events } from './events';
 import { ParseJsonPipe } from './pipes/parse-json.pipe';
 import { Room } from '@game/models/room.model';
+import { ChatService } from '@game/services/chat.service';
 
 interface CreateRoomBody {
   hostName: string;
@@ -43,6 +44,7 @@ export class GameGateway implements OnGatewayDisconnect {
   constructor(
     private roomService: RoomService,
     private playerService: PlayerService,
+    private chatService: ChatService,
   ) {}
 
   @SubscribeMessage(events.LEAVE_ROOM)
@@ -158,5 +160,34 @@ export class GameGateway implements OnGatewayDisconnect {
       room: updatedRoom,
     });
     client.to(updatedRoom.code).emit('player-joined', { room: updatedRoom });
+  }
+
+  @SubscribeMessage(events.CHAT_SEND_MESSAGE)
+  @UsePipes(new ParseJsonPipe())
+  sendMessage(
+    @MessageBody() data: { message: string },
+    @ConnectedSocket() client: Socket,
+  ) {
+    const author = this.playerService.findByClientId(client.id);
+
+    if (!author) {
+      throw new NotFoundException('Player not found');
+    }
+
+    let chat = this.chatService.findByRoomId(author.roomId);
+
+    if (!chat) {
+      chat = this.chatService.create(author.roomId);
+    }
+
+    const updatedChat = this.chatService.addMessage({
+      authorId: author.id,
+      chatId: chat.id,
+      message: data.message,
+    });
+
+    this.server.to(author.roomId).emit(events.CHAT_NEW_MESSAGE, {
+      chat: updatedChat,
+    });
   }
 }

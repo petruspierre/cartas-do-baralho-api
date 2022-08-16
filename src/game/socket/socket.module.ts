@@ -6,15 +6,19 @@ import { RoomService } from '@game/services/room.service';
 
 import { GameGateway } from './game.gateway';
 import { PlayerService } from '@game/services/player.service';
+import { GameRepositoryInMemory } from '@game/repositories/in-memory/game.repository-in-memory';
+import { GameService } from '@game/services/game.service';
 
 @Module({
   imports: [],
   providers: [
     RoomRepositoryInMemory,
     PlayerRepositoryInMemory,
+    GameRepositoryInMemory,
 
     RoomService,
     PlayerService,
+    GameService,
 
     GameGateway,
   ],

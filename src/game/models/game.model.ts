@@ -1,3 +1,5 @@
+import { Card } from '@http/graphql/models/card.model';
+
 export class Game {
   id: string;
 
@@ -6,4 +8,6 @@ export class Game {
   roomId: string; // Room
 
   round: number;
+
+  table: Card[];
 }
