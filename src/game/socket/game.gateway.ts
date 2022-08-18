@@ -182,12 +182,16 @@ export class GameGateway implements OnGatewayDisconnect {
 
     const updatedChat = this.chatService.addMessage({
       authorId: author.id,
-      chatId: chat.id,
+      chat: chat,
       message: data.message,
     });
 
+    const newMessage = updatedChat.messages[updatedChat.messages.length - 1];
+
     this.server.to(author.roomId).emit(events.CHAT_NEW_MESSAGE, {
-      chat: updatedChat,
+      author: author.name,
+      id: newMessage.id,
+      text: newMessage.text,
     });
   }
 }

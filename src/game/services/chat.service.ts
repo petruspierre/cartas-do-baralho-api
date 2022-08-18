@@ -3,9 +3,10 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { ChatRepositoryInMemory } from '@game/repositories/in-memory/chat.repository-in-memory';
 
 import { v4 as uuid } from 'uuid';
+import { Chat } from '@game/models/chat.model';
 
 interface AddMessageParams {
-  chatId: string;
+  chat: Chat;
   message: string;
   authorId: string;
 }
@@ -37,11 +38,9 @@ export class ChatService {
   }
 
   addMessage(params: AddMessageParams) {
-    const chat = this.chatRepository.findById(params.chatId);
-
-    const updatedChat = this.chatRepository.update(chat.id, {
+    const updatedChat = this.chatRepository.update(params.chat.id, {
       messages: [
-        ...chat.messages,
+        ...params.chat.messages,
         {
           id: uuid(),
           authorId: params.authorId,

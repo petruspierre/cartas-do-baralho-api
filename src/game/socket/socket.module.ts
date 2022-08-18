@@ -8,6 +8,8 @@ import { GameGateway } from './game.gateway';
 import { PlayerService } from '@game/services/player.service';
 import { GameRepositoryInMemory } from '@game/repositories/in-memory/game.repository-in-memory';
 import { GameService } from '@game/services/game.service';
+import { ChatService } from '@game/services/chat.service';
+import { ChatRepositoryInMemory } from '@game/repositories/in-memory/chat.repository-in-memory';
 
 @Module({
   imports: [],
@@ -15,10 +17,12 @@ import { GameService } from '@game/services/game.service';
     RoomRepositoryInMemory,
     PlayerRepositoryInMemory,
     GameRepositoryInMemory,
+    ChatRepositoryInMemory,
 
     RoomService,
     PlayerService,
     GameService,
+    ChatService,
 
     GameGateway,
   ],
