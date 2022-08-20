@@ -10,6 +10,10 @@ export class RoomService {
 
   constructor(private roomRepository: RoomRepositoryInMemory) {}
 
+  findById(id: string): Room {
+    return this.roomRepository.findById(id);
+  }
+
   findByCode(code: string): Room {
     return this.roomRepository.findByCode(code);
   }

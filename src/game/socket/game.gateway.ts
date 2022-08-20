@@ -16,6 +16,7 @@ import { events } from './events';
 import { ParseJsonPipe } from './pipes/parse-json.pipe';
 import { Room } from '@game/models/room.model';
 import { ChatService } from '@game/services/chat.service';
+import { GameService } from '@game/services/game.service';
 
 interface CreateRoomBody {
   hostName: string;
@@ -43,6 +44,7 @@ export class GameGateway implements OnGatewayDisconnect {
     private roomService: RoomService,
     private playerService: PlayerService,
     private chatService: ChatService,
+    private gameService: GameService,
   ) {}
 
   @SubscribeMessage(events.LEAVE_ROOM)
@@ -123,8 +125,6 @@ export class GameGateway implements OnGatewayDisconnect {
 
     if (!player) {
       player = this.playerService.create(client.id, data.playerName ?? '');
-    } else if ((player.roomId = data.roomCode)) {
-      return;
     }
 
     let room = this.roomService.findByCode(data.roomCode);
@@ -139,6 +139,14 @@ export class GameGateway implements OnGatewayDisconnect {
         code: data.roomCode,
       });
     } else {
+      if (player.roomId === room.code) {
+        client.emit(events.ROOM_JOINED, {
+          player,
+          room,
+        });
+        return;
+      }
+
       this.logger.log(`Room ${data.roomCode} found. Joining...`);
 
       updatedRoom = this.roomService.update(room.code, {
@@ -190,6 +198,46 @@ export class GameGateway implements OnGatewayDisconnect {
       author: author.name,
       id: newMessage.id,
       text: newMessage.text,
+    });
+  }
+
+  @SubscribeMessage(events.START_GAME)
+  @UsePipes(new ParseJsonPipe())
+  startGame(@ConnectedSocket() client: Socket) {
+    const player = this.playerService.findByClientId(client.id);
+
+    if (!player || !player.roomId) {
+      return;
+    }
+
+    this.logger.log('Starting game for room: ' + player.roomId);
+
+    const room = this.roomService.findByCode(player.roomId);
+
+    if (!room) {
+      this.logger.log('Room not found for game');
+      return;
+    }
+
+    if (room.hostId !== player.id) {
+      this.logger.log('Player is not host');
+      return;
+    }
+
+    if (room.players.length < 2) {
+      this.logger.log('Not enough players');
+      return;
+    }
+
+    if (room.gameId) {
+      this.logger.log('Game already started');
+      return;
+    }
+
+    const game = this.gameService.create(room.id);
+
+    this.server.to(room.code).emit(events.GAME_STARTED, {
+      game,
     });
   }
 }

@@ -17,9 +17,15 @@ export class GameService {
       throw new NotFoundException('Room not found');
     }
 
-    return this.gameRepository.create({
+    const game = this.gameRepository.create({
       judgeId: room.players[0].id,
       roomId: room.id,
     });
+
+    this.roomRepository.update(room.id, {
+      gameId: game.id,
+    });
+
+    return game;
   }
 }
