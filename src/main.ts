@@ -5,7 +5,9 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.enableCors({
     origin:
-      process.env.NODE_ENV === 'development' ? '*' : ['/.petrus.dev.br$/'],
+      process.env.NODE_ENV === 'development'
+        ? '*'
+        : /^(https:\/\/([^\.]*\.)?petrus\.dev\.br)$/i,
   });
   await app.listen(3456);
 }

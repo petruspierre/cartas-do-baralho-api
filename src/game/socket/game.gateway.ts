@@ -33,7 +33,9 @@ interface KickPlayerBody {
 @WebSocketGateway({
   cors: {
     origin:
-      process.env.NODE_ENV === 'development' ? '*' : ['/.petrus.dev.br$/'],
+      process.env.NODE_ENV === 'development'
+        ? '*'
+        : /^(https:\/\/([^\.]*\.)?petrus\.dev\.br)$/i,
   },
 })
 export class GameGateway implements OnGatewayDisconnect {
