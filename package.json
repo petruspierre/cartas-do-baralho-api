@@ -24,6 +24,9 @@
     "migrate:status": "prisma migrate status --preview-feature",
     "generate": "prisma generate"
   },
+  "engines": {
+    "node": "^16"
+  },
   "dependencies": {
     "@faker-js/faker": "^7.3.0",
     "@nestjs/apollo": "^10.0.19",
