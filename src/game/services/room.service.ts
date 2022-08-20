@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 
 import { Room } from '@game/models/room.model';
 import { RoomRepositoryInMemory } from '@game/repositories/in-memory/room.repository-in-memory';
@@ -6,6 +6,8 @@ import { Player } from '@game/models/player.model';
 
 @Injectable()
 export class RoomService {
+  private readonly logger = new Logger(RoomService.name);
+
   constructor(private roomRepository: RoomRepositoryInMemory) {}
 
   findByCode(code: string): Room {
@@ -35,6 +37,7 @@ export class RoomService {
     });
 
     if (updatedRoom.players.length === 0) {
+      this.logger.log('Destroying room ' + code);
       this.roomRepository.delete(code);
     }
 

@@ -1,6 +1,7 @@
 export const events = {
   CREATE_ROOM: 'create-room',
   JOIN_ROOM: 'join-room',
+  ROOM_CREATED: 'room-created',
   ROOM_JOINED: 'room-joined',
   LEAVE_ROOM: 'leave-room',
   KICK_PLAYER: 'kick-player',

@@ -110,7 +110,7 @@ export class GameGateway implements OnGatewayDisconnect {
 
     client.join(room.code);
 
-    this.server.to(room.code).emit('room-created', room);
+    this.server.to(room.code).emit(events.ROOM_CREATED, room);
   }
 
   @SubscribeMessage(events.JOIN_ROOM)
@@ -133,7 +133,7 @@ export class GameGateway implements OnGatewayDisconnect {
     let updatedRoom: Room = null;
 
     if (!room) {
-      this.logger.log(`Room ${data.roomCode} not found`);
+      this.logger.log(`Room ${data.roomCode} not found. Creating...`);
 
       room = this.roomService.create(player);
 
@@ -141,7 +141,7 @@ export class GameGateway implements OnGatewayDisconnect {
         code: data.roomCode,
       });
     } else {
-      this.logger.log(`Room ${data.roomCode} found`);
+      this.logger.log(`Room ${data.roomCode} found. Joining...`);
 
       updatedRoom = this.roomService.update(room.code, {
         code: data.roomCode,
