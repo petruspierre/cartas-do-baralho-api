@@ -7,4 +7,5 @@ export interface CreateGameParams {
 
 export interface GameRepository {
   create(params: CreateGameParams): Game;
+  findByRoomId(roomId: string): Game;
 }

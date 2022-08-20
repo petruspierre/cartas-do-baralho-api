@@ -28,4 +28,8 @@ export class GameService {
 
     return game;
   }
+
+  findByRoomId(roomId: string) {
+    return this.gameRepository.findByRoomId(roomId);
+  }
 }

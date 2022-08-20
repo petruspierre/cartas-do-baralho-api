@@ -15,7 +15,7 @@ export class GameRepositoryInMemory implements GameRepository {
   create(params: CreateGameParams): Game {
     const game = new Game();
 
-    Object.assign(game, {
+    const newGame = Object.assign(game, {
       id: uuid(),
       judgeId: params.judgeId,
       roomId: params.roomId,
@@ -23,6 +23,12 @@ export class GameRepositoryInMemory implements GameRepository {
       table: [],
     } as Game);
 
-    return game;
+    this.games.push(newGame);
+
+    return newGame;
+  }
+
+  findByRoomId(roomId: string): Game {
+    return this.games.find((game) => game.roomId === roomId);
   }
 }

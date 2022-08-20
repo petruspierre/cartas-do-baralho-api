@@ -161,9 +161,12 @@ export class GameGateway implements OnGatewayDisconnect {
 
     client.join(updatedRoom.code);
 
+    const game = this.gameService.findByRoomId(updatedRoom.id);
+
     client.emit(events.ROOM_JOINED, {
       player: updatedPlayer,
       room: updatedRoom,
+      game,
     });
     client.to(updatedRoom.code).emit('player-joined', { room: updatedRoom });
   }
