@@ -18,10 +18,6 @@ import { Room } from '@game/models/room.model';
 import { ChatService } from '@game/services/chat.service';
 import { GameService } from '@game/services/game.service';
 
-interface CreateRoomBody {
-  hostName: string;
-}
-
 interface JoinRoomBody {
   roomCode: string;
   playerName?: string;
@@ -65,6 +61,10 @@ export class GameGateway implements OnGatewayDisconnect {
     this.playerService.delete(player.id);
     const updatedRoom = this.roomService.deletePlayer(room.code, player.id);
 
+    // if(!updatedRoom) {
+    //   this.gameService.delete()
+    // }
+
     this.server
       .to(room.code)
       .emit(events.PLAYER_LEFT, { player, room: updatedRoom });
@@ -96,17 +96,9 @@ export class GameGateway implements OnGatewayDisconnect {
 
   @SubscribeMessage(events.CREATE_ROOM)
   @UsePipes(new ParseJsonPipe())
-  createRoom(
-    @MessageBody() data: CreateRoomBody,
-    @ConnectedSocket() client: Socket,
-  ) {
-    let host = this.playerService.create(client.id, data.hostName);
-
-    const room = this.roomService.create(host);
-
-    host = this.playerService.update(host.id, {
-      roomId: room.code,
-    });
+  createRoom(@ConnectedSocket() client: Socket) {
+    const room = this.roomService.create();
+    this.chatService.create(room.id);
 
     client.join(room.code);
 
@@ -128,47 +120,42 @@ export class GameGateway implements OnGatewayDisconnect {
     }
 
     let room = this.roomService.findByCode(data.roomCode);
-    let updatedRoom: Room = null;
 
     if (!room) {
-      this.logger.log(`Room ${data.roomCode} not found. Creating...`);
-
-      room = this.roomService.create(player);
-
-      updatedRoom = this.roomService.update(room.code, {
-        code: data.roomCode,
-      });
-    } else {
-      if (player.roomId === room.code) {
-        client.emit(events.ROOM_JOINED, {
-          player,
-          room,
-        });
-        return;
-      }
-
-      this.logger.log(`Room ${data.roomCode} found. Joining...`);
-
-      updatedRoom = this.roomService.update(room.code, {
-        code: data.roomCode,
-        players: [...room.players, player],
-      });
+      room = this.roomService.create();
     }
 
-    const updatedPlayer = this.playerService.update(player.id, {
-      roomId: updatedRoom.code,
+    this.logger.log(`Room ${data.roomCode} found. Joining...`);
+
+    room = this.roomService.update(room.code, {
+      code: data.roomCode,
+      hostId: room.hostId === '' ? player.id : room.hostId,
+      players: [...room.players, player],
     });
 
-    client.join(updatedRoom.code);
+    let chat = this.chatService.findByRoomId(room.id);
+    if (!chat) {
+      this.logger.log(`Chat not found. Creating...`);
+      chat = this.chatService.create(room.id);
+    }
 
-    const game = this.gameService.findByRoomId(updatedRoom.id);
+    console.log(chat);
+
+    const updatedPlayer = this.playerService.update(player.id, {
+      roomId: room.code,
+    });
+
+    client.join(room.code);
+
+    const game = this.gameService.findByRoomId(room.id);
 
     client.emit(events.ROOM_JOINED, {
       player: updatedPlayer,
-      room: updatedRoom,
+      room: room,
       game,
+      chat,
     });
-    client.to(updatedRoom.code).emit('player-joined', { room: updatedRoom });
+    client.to(room.code).emit('player-joined', { room });
   }
 
   @SubscribeMessage(events.CHAT_SEND_MESSAGE)
@@ -193,14 +180,13 @@ export class GameGateway implements OnGatewayDisconnect {
       authorId: author.id,
       chat: chat,
       message: data.message,
+      authorName: author.name,
     });
 
     const newMessage = updatedChat.messages[updatedChat.messages.length - 1];
 
     this.server.to(author.roomId).emit(events.CHAT_NEW_MESSAGE, {
-      author: author.name,
-      id: newMessage.id,
-      text: newMessage.text,
+      message: newMessage,
     });
   }
 

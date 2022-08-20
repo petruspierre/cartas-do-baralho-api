@@ -2,10 +2,7 @@ import { v4 as uuid } from 'uuid';
 import { Room } from '@game/models/room.model';
 import { Injectable } from '@nestjs/common';
 
-import {
-  CreateRoomParams,
-  RoomRepository,
-} from '../interfaces/room.repository-interface';
+import { RoomRepository } from '../interfaces/room.repository-interface';
 
 @Injectable()
 export class RoomRepositoryInMemory implements RoomRepository {
@@ -19,7 +16,7 @@ export class RoomRepositoryInMemory implements RoomRepository {
     return this.rooms.find((r) => r.id === id);
   }
 
-  create({ host }: CreateRoomParams): Room {
+  create(): Room {
     const room = new Room();
 
     const roomCode = Math.random()
@@ -29,9 +26,9 @@ export class RoomRepositoryInMemory implements RoomRepository {
 
     Object.assign(room, {
       id: uuid(),
-      hostId: host.id,
+      hostId: '',
       code: roomCode,
-      players: [host],
+      players: [],
     } as Room);
 
     this.rooms.push(room);

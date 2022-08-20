@@ -9,6 +9,7 @@ interface AddMessageParams {
   chat: Chat;
   message: string;
   authorId: string;
+  authorName: string;
 }
 
 @Injectable()
@@ -45,6 +46,7 @@ export class ChatService {
           id: uuid(),
           authorId: params.authorId,
           text: params.message,
+          authorName: params.authorName,
         },
       ],
     });

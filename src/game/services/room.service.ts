@@ -18,8 +18,8 @@ export class RoomService {
     return this.roomRepository.findByCode(code);
   }
 
-  create(host: Player): Room {
-    return this.roomRepository.create({ host });
+  create(): Room {
+    return this.roomRepository.create();
   }
 
   update(code: string, room: Partial<Room>): Room {
@@ -43,6 +43,8 @@ export class RoomService {
     if (updatedRoom.players.length === 0) {
       this.logger.log('Destroying room ' + code);
       this.roomRepository.delete(code);
+
+      return null;
     }
 
     return updatedRoom;

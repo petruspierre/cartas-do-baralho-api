@@ -33,6 +33,8 @@ export class ChatRepositoryInMemory implements ChatRepository {
       messages: [],
     } as Chat);
 
+    this.chats.push(chat);
+
     return chat;
   }
 
