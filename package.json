@@ -18,7 +18,11 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json"
+    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "migrate:dev": "prisma migrate dev --preview-feature",
+    "migrate:deploy": "prisma migrate deploy --preview-feature",
+    "migrate:status": "prisma migrate status --preview-feature",
+    "generate": "prisma generate"
   },
   "dependencies": {
     "@faker-js/faker": "^7.3.0",
